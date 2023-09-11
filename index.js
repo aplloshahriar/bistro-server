@@ -1,12 +1,12 @@
-const express=require("express");
-const app=express();
+const express = require("express");
+const app = express();
 const cors = require('cors');
 
 require('dotenv').config();
-const port=process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors()); 
+app.use(cors());
 app.use(express.json());
 
 
@@ -30,12 +30,36 @@ async function run() {
     await client.connect();
 
     const menuCollection = client.db("bistroDB").collection("menu");
+    const reviewCollection = client.db("bistroDB").collection("reviews");
+    const cartCollection = client.db("bistroDB").collection("carts");
 
-    app.get('/menu',async(req,res)=>{
-        const result=await menuCollection.find().toArray();
-        res.send(result);
+    app.get('/menu', async (req, res) => {
+      const result = await menuCollection.find().toArray();
+      res.send(result);
     })
 
+    app.get('/reviews', async (req, res) => {
+      const result = await reviewCollection.find().toArray();
+      res.send(result);
+    })
+
+
+    // cart collection apis
+    app.get('/carts', async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+      const query = { email: email };
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post('/carts', async (req, res) => {
+      const item = req.body;
+      const result = await cartCollection.insertOne(item);
+      res.send(result);
+    })
 
 
     // Send a ping to confirm a successful connection
@@ -50,9 +74,9 @@ run().catch(console.dir);
 
 
 
-app.get('/',(req,res)=>{
-    res.send('boss is here')
+app.get('/', (req, res) => {
+  res.send('boss is here')
 })
-app.listen(port,()=>{
-    console.log(`Bistro Running on Port ${port}`)
+app.listen(port, () => {
+  console.log(`Bistro Running on Port ${port}`)
 })
